@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="./js/vue.js"></script>
+    <link rel="stylesheet" href="./css/eui.css">
+    <script src="./js/eui.js"></script>
+    <script src="./js/axios.min.js"></script>
+    <link rel="stylesheet" href="./css/index.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+
+</head>
+
+<body>
+    <div id="app">
+        <el-container>
+            <el-header height="160px">
+                <div>
+                    <el-menu :default-active="activeIndex" class="el-menu-demo menu" mode="horizontal"
+                        @select="handleSelect">
+                        <el-menu-item index="0" style="float: left;"><img src="./imgs/图标.jpg" alt=""
+                                class="pic-1"></el-menu-item>
+                        <el-menu-item index="1" style="margin-left: 100px;"><input type="text" placeholder="请输入搜索内容"
+                                v-model="searchValue" class="inp-11"><button @click="serachMusic"
+                                class="but-11">歌名🔍</button></el-menu-item>
+                        <el-menu-item index="3" style="float: right;" @click="location.href = '/login.html'"
+                            v-show="isLogin === false">登录</el-menu-item>
+                        <el-menu-item index="3" style="float: right;" @click="logout"
+                            v-show="isLogin === true">退出登录</el-menu-item>
+                        <el-menu-item style="float: right;"> <el-divider
+                                direction="vertical"></el-divider></el-menu-item>
+                        <el-menu-item index="3" style="float: right;" @click="changeSelf"
+                            v-show="isLogin === true">修改个人信息</el-menu-item>
+                        <el-menu-item index="2" style="float: right;"><a href="/updateMusic.html"
+                                v-show="isLogin === true">上传音乐</a></el-menu-item>
+                        <el-menu-item index="1" style="float: right;" @click="selfMusic"
+                            v-show="isLogin === true">我的喜欢</el-menu-item>
+                        <el-menu-item index="1" style="float: right;" @click="location.href='/manage.html'"
+                            v-show="admin == 1">管理</el-menu-item>
+                    </el-menu>
+                </div>
+                <div>
+                    <el-menu :default-active="activeIndex" class="el-menu-demo" mode="horizontal"
+                        @select="handleSelect">
+                        <el-row>
+                            <el-col :span="12"><el-menu-item index="1">首页</el-menu-item></el-col>
+                            <!-- <el-col :span="8"> <el-menu-item index="2">歌手</el-menu-item></el-col> -->
+                            <!-- <el-col :span="6"><el-menu-item index="3">榜单</el-menu-item></el-col> -->
+                            <el-col :span="12"><el-menu-item index="4">分类</el-menu-item></el-col>
+                        </el-row>
+                    </el-menu>
+                </div>
+            </el-header>
+            <el-main>
+                <div v-if="activeIndex == 1">
+                    <div class="banner">
+                        <div id="slide" :default-active="bannerIndex" ref="slide">
+                            <div class="item" style="background-image: url(./imgs/1.jpg);" index="1">
+                                <div class="content">
+                                    <div class="name">精选好歌</div>
+                                    <button>查看更多</button>
+                                </div>
+                            </div>
+                            <div class="item" style="background-image: url(./imgs/2.jpg);" index="2">
+                                <div class="content">
+                                    <div class="name">精选好歌</div>
+                                    <button>查看更多</button>
+                                </div>
+                            </div>
+                            <div class="item" style="background-image: url(./imgs/3.jpg);" index="3">
+                                <div class="content">
+                                    <div class="name">精选好歌</div>
+                                    <button>查看更多</button>
+                                </div>
+                            </div>
+                            <div class="item" style="background-image: url(./imgs/4.jpg);" index="4">
+                                <div class="content">
+                                    <div class="name">精选好歌</div>
+                                    <button>查看更多</button>
+                                </div>
+                            </div>
+                            <div class="item" style="background-image: url(./imgs/5.jpg);" index="5">
+                                <div class="content">
+                                    <div class="name">精选好歌</div>
+                                    <button>查看更多</button>
+                                </div>
+                            </div>
+                            <div class="item" style="background-image: url(./imgs/6.jpg);" index="6">
+                                <div class="content">
+                                    <div class="name">精选好歌</div>
+                                    <button>查看更多</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="buttons">
+                            <button @click="prev"><i class="fa-solid fa-angle-left"></i></button>
+                            <button @click="next" class="next"><i class="fa-solid fa-angle-right"></i></button>
+                        </div>
+                    </div>
+                    <el-row :gutter="20">
+                        <el-col :span="16">
+                            <h2>精选歌曲</h2>
+                            <el-row :gutter="20" v-for="(row, rowIndex) in Math.ceil(MusicList.length / 4)"
+                                :key="rowIndex">
+                                <el-col :span="6"
+                                    v-for="(item, colIndex) in MusicList.slice(rowIndex * 4, (rowIndex + 1) * 4)"
+                                    :key="colIndex">
+                                    <el-card :body-style="{ padding: '0px' }">
+                                        <img :src="item.Imgurl" class="image" style="cursor: pointer;"
+                                            @click="location.href='./musicDetail.html?id=' + item.id">
+                                        <div class="char">
+                                            <span>{{item.title}}</span>
+                                        </div>
+                                    </el-card>
+                                </el-col>
+                                <!-- <el-col :span="6">
+                                    <el-card :body-style="{ padding: '0px' }">
+                                        <img src="https://shadow.elemecdn.com/app/element/hamburger.9cf7b091-55e9-11e9-a976-7f4d0b07eef6.png"
+                                            class="image">
+                                        <div class="char">
+                                            <span>好吃的汉堡</span>
+                                        </div>
+                                    </el-card>
+                                </el-col>
+                                <el-col :span="6">
+                                    <el-card :body-style="{ padding: '0px' }">
+                                        <img src="https://shadow.elemecdn.com/app/element/hamburger.9cf7b091-55e9-11e9-a976-7f4d0b07eef6.png"
+                                            class="image">
+                                        <div class="char">
+                                            <span>好吃的汉堡</span>
+                                        </div>
+                                    </el-card>
+                                </el-col>
+                                <el-col :span="6">
+                                    <el-card :body-style="{ padding: '0px' }">
+                                        <img src="https://shadow.elemecdn.com/app/element/hamburger.9cf7b091-55e9-11e9-a976-7f4d0b07eef6.png"
+                                            class="image">
+                                        <div class="char">
+                                            <span>好吃的汉堡</span>
+                                        </div>
+                                    </el-card>
+                                </el-col> -->
+                            </el-row>
+                        </el-col>
+                        <el-col :span="8">
+                            <h3>排行榜(静态,不可点击)</h3>
+                            <div class="grid-content bg-purple" height="200px">
+                                <el-row :gutter="10">
+                                    <el-col :span="10">
+                                        <img src="./imgs/6.jpg" alt="" width="260px" height="260px" class="rankImg">
+                                    </el-col>
+                                    <el-col :span="14">
+                                        <div>
+                                            <div class="rankk">1.爱如火</div>
+                                            <div class="rankk">2.牵丝戏</div>
+                                            <div class="rankk">3.起风了</div>
+                                        </div>
+                                    </el-col>
+                                </el-row>
+                            </div>
+                            <div class="grid-content bg-purple" height="200px">
+                                广告推荐
+                                <img src="./imgs/5.jpg" alt="" width="100%">
+                            </div>
+                        </el-col>
+                    </el-row>
+                </div>
+
+                <!-- <div v-if="activeIndex == 2">
+                    列出歌手,列出歌曲名
+                    算了,放过自己
+                </div> -->
+                <!-- <div v-if="activeIndex == 3">
+                    榜单
+                    别搞了,真不想搞了
+                </div> -->
+                <div v-if="activeIndex == 4">
+                    <!-- 分类
+                    来个标签? -->
+                    <div>
+                        <el-tag :type="type1" @click="clickTag(1)">热歌</el-tag>
+                        <el-tag :type="type2" @click="clickTag(2)">古风</el-tag>
+                    </div>
+                    <div>
+                        <el-table :data="tagList" stripe style="width: 100%">
+                            <el-table-column width="180px" type="index">
+                            </el-table-column>
+                            <el-table-column prop="categroy" label="类别">
+                            </el-table-column>
+                            <el-table-column prop="title" label="歌名">
+                            </el-table-column>
+                            <el-table-column prop="author" label="歌手">
+                            </el-table-column>
+                            <el-table-column label="播放">
+                                <template slot-scope="scope">
+                                    <el-button :icon="icon" circle
+                                        @click="location.href='/musicDetail.html?id=' + scope.row.id"></el-button>
+                                </template>
+                            </el-table-column>
+                            <!-- <el-table-column prop="like" label="收藏">
+                                <template slot-scope="scope">
+                                    <el-button :type="type" icon="el-icon-star-on" circle
+                                        @click="delLike(scope.$index)"></el-button>
+                                </template>
+                            </el-table-column> -->
+
+                        </el-table>
+                    </div>
+                </div>
+
+
+            </el-main>
+
+            <el-footer>
+                项目版权所有@13组-壹迩三
+            </el-footer>
+        </el-container>
+    </div>
+</body>
+<script>
+    let v = new Vue({
+        el: '#app',
+        data: {
+            isLogin: false,
+            activeIndex: '1',
+            bannerIndex: '0',
+            MusicList: [],
+            searchValue: '',
+            userId: '',
+            admin: 0,
+            type1: 'info',
+            type2: 'info',
+            tagList: [],
+            icon: 'el-icon-video-play',
+            // type: 'primary'
+        },
+        methods: {
+            // 这里是有问题的
+            // delLike(songId) {
+            //     console.log(this.likeIdList[songId].id)
+            //     if (confirm('是否取消收藏')) {
+            //         axios.get('/music/delLike?id=' + this.likeIdList[songId].id).then(res => { })
+            //         location.reload()
+            //     }
+
+            // },
+            clickTag(index) {
+                // 一次只查一个
+                let categroy = '热歌'
+                if (index == 1) {
+                    if (this.type2 == 'success') {
+                        this.type2 = 'info'
+                    }
+                    this.type1 = 'success'
+                } else if (index == 2) {
+                    if (this.type1 == 'success') {
+                        this.type1 = 'info'
+                    }
+                    this.type2 = 'success'
+                    categroy = '古风'
+                }
+                // 开始查询
+                axios.get('/music/categroy?categroy=' + categroy).then(res => {
+                    this.tagList = res.data
+                    console.log(this.tagList)
+                })
+            },
+            selfMusic() {
+                location.href = '/selfMusic.html?id=' + this.userId
+            },
+            changeSelf() {
+                location.href = '/changeSelf.html?id=' + this.userId
+            },
+            handleSelect(key, keyPath) {
+                this.activeIndex = key;
+                console.log(key, keyPath);
+            },
+            prev() {
+                const slide = this.$refs.slide;
+                const items = slide.querySelectorAll('.item');
+                const lastItem = items[items.length - 1];
+                slide.insertBefore(lastItem, items[0]);
+            },
+            next() {
+                const slide = this.$refs.slide;
+                const items = slide.querySelectorAll('.item');
+                const firstItem = items[0];
+                slide.appendChild(firstItem);
+            },
+            logout() {
+                if (confirm('是否退出用户')) {
+                    axios.get('/user/logout').then(res => {
+                        this.isLogin = false
+                        location.reload()
+                    })
+                }
+            },
+            serachMusic() {
+                location.href = '/list.html?wd=' + v.searchValue
+            },
+            getMusicByCate() {//通过分类id查询数据
+                var cate = location.search.split("=")[1];//如果含有cate,证明需要分类查询,拿到cate值
+                axios.get('/music/cate?cate=' + cate).then(res => {//将分类id传到/cate端口,得到返回值
+                    this.productArr = res.data//将分类商品返回值赋值
+                })
+            }
+        },
+        created() {
+            axios.get('/music/list').then(res => {
+                this.MusicList = res.data
+                let str = this.MusicList.Imgurl
+                this.MusicList.Imgurl = str.replace(/\\/g, '/')
+                console.log(str, this.MusicList.Imgurl)
+                console.log(this.MusicList)
+            })
+            axios.get('/user/isLogin').then(res => {
+                console.log('登陆数据:', res.data)
+                if (res.data != '') {
+                    console.log('用户已登录')
+                    this.isLogin = true //判断是否登录赋值true
+                    this.userId = res.data.id
+                    this.admin = res.data.admin
+                } else {
+                    console.log('用户未登录')
+                }
+            })
+        },
+    })
+</script>
+
+</html>

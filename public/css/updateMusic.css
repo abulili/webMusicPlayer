@@ -1,0 +1,25 @@
+.el-textarea {
+    width: 70%;
+}
+
+textarea {
+    height: 150px;
+}
+
+.el-textarea {
+    width: 67%;
+}
+
+textarea {
+    height: 150px;
+}
+
+
+.el-input {
+    width: 70%;
+
+    .el-text__inner {
+        width: 70%;
+        height: 50px;
+    }
+}

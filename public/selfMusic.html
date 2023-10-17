@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="./js/vue.js"></script>
+    <link rel="stylesheet" href="./css/eui.css">
+    <script src="./js/eui.js"></script>
+    <script src="./js/axios.min.js"></script>
+    <link rel="stylesheet" href="./css/index.css">
+</head>
+
+<body>
+    <div id="app">
+        <el-container>
+            <el-header height="160px">
+                <div>
+                    <el-menu :default-active="activeIndex" class="el-menu-demo menu" mode="horizontal"
+                        @select="handleSelect">
+                        <el-menu-item index="0" style="float: left;"><img src="./imgs/图标.jpg" alt=""
+                                class="pic-1"></el-menu-item>
+                        <el-menu-item index="3" style="float: right;" @click="logout">退出登录</el-menu-item>
+                        <el-menu-item style="float: right;"> <el-divider
+                                direction="vertical"></el-divider></el-menu-item>
+                        <el-menu-item index="5" style="float: right;"><a href="/index.html">回到主页</a></el-menu-item>
+                        <el-menu-item index="2" style="float: right;"><a href="./updateMusic.html"
+                                target="_blank">上传音乐</a></el-menu-item>
+                    </el-menu>
+                </div>
+            </el-header>
+            <el-main>
+                <div>
+                    <h1>我的收藏歌曲</h1>
+                </div>
+                <div>
+                    <el-table :data="likeList" stripe style="width: 100%">
+                        <el-table-column width="180px" type="index">
+                        </el-table-column>
+                        <el-table-column prop="title" label="歌曲">
+                        </el-table-column>
+                        <el-table-column prop="author" label="歌手">
+                        </el-table-column>
+                        <el-table-column label="播放">
+                            <template slot-scope="scope">
+                                <el-button :icon="icon" circle @click="musicPlay(scope.row.mp3url)"></el-button>
+                            </template>
+                        </el-table-column>
+                        <el-table-column prop="like" label="收藏">
+                            <template slot-scope="scope">
+                                <el-button type="warning" icon="el-icon-star-on" circle
+                                    @click="delLike(scope.$index)"></el-button>
+                            </template>
+                        </el-table-column>
+
+                    </el-table>
+                </div>
+            </el-main>
+            <el-footer>项目版权所有@13组-壹迩三</el-footer>
+        </el-container>
+    </div>
+</body>
+<script>
+    let v = new Vue({
+        el: '#app',
+        data: {
+            index: 1,
+            icon: 'el-icon-video-play',
+            activeIndex: '1',
+            likeIdList: [],
+            likeList: [],
+            audio: ''
+        },
+        methods: {
+            handleSelect(key, keyPath) {
+                console.log(key, keyPath);
+            },
+            logout() {
+                if (confirm('是否退出用户')) {
+                    axios.get('/user/logout').then(res => {
+                        this.isLogin = false
+                        console.log('退出成功')
+                        location.href = '/index.html'
+                    })
+                }
+            },
+            getMusicById() {
+                // let id = location.search.split("=")[1];
+                // axios.get('/music/like?id=' + id).then(res => {
+                //     this.likeIdList = res.data
+                //     for (let i = 0; i < res.data.length; ++i) {
+                //         axios.get('/music/likely?id=' + res.data[i].loveId).then(result => {
+                //             v.likeList.push(result.data)
+                //         })
+                //     }
+                // })
+                let id = location.search.split("=")[1];
+                axios.get('/music/like?id=' + id).then(res => {
+                    this.likeIdList = res.data;
+                    let likePromises = this.likeIdList.map(item => {
+                        return axios.get('/music/likely?id=' + item.loveId);
+                    });
+
+                    Promise.all(likePromises).then(results => {
+                        this.likeList = results.map(result => result.data);
+                        let tempList = this.likeList;
+                        this.likeList = [].concat(...tempList);
+                        console.log(this.likeList);
+                    }).catch(error => {
+                        console.error(error);
+                    });
+                })
+            },
+            musicPlay(audioPath) {
+                if (this.icon == 'el-icon-video-play') {
+                    audioPath = audioPath.replace(/\\/g, '/')
+                    this.audio = new Audio(audioPath);
+                    this.audio.play();
+                    this.icon = 'el-icon-video-pause'
+                }
+                else {
+                    this.audio.pause();
+                    this.icon = 'el-icon-video-play'
+                }
+            },
+            sendLike(songId) {
+                if (this.isLogin == false) {
+                    location.href = '/login.html'
+                }
+                if (this.type == "primary") {
+                    if (confirm('是否取消收藏')) {
+                        let id = location.search.split("=")[1];
+                        axios.get('/music/delLike?id=' + songId).then(res => { })
+                        this.type = ' '
+                    }
+                } else {
+                    this.music[0].userId = this.userId
+                    console.log(this.music[0].userId)
+                    axios.post('/music/sendLike', this.music[0]).then(res => {
+                        if (res.data == 1) {
+                            alert('添加成功')
+                            this.type = "warning"
+                        }
+                    })
+                }
+            },
+            delLike(index) {
+                // console.log('对的啊,就是取消收藏')
+                // console.log(this.likeIdList[index])
+                // 这个要喜欢id和
+                if (confirm('是否取消收藏')) {
+                    axios.get('/music/delLike?id=' + this.likeIdList[index].id).then(res => {
+                        location.reload()
+                    })
+                }
+            }
+        },
+        created() {
+            if (location.search.indexOf('id') != -1) {
+                // 存在隐患,有时间再来
+                this.getMusicById();
+            } else {
+                location.href = '/login.html'
+            }
+        },
+    })
+</script>
+
+</html>

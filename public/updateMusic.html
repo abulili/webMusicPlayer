@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="./js/vue.js"></script>
+    <link rel="stylesheet" href="./css/eui.css">
+    <script src="./js/eui.js"></script>
+    <script src="./js/axios.min.js"></script>
+    <link rel="stylesheet" href="./css/index.css">
+    <link rel="stylesheet" href="./css/updateMusic.css">
+</head>
+
+<body>
+    <div id="app">
+        <el-container>
+            <el-header height="160px">
+                <div>
+                    <el-menu :default-active="activeIndex" class="el-menu-demo menu" mode="horizontal"
+                        @select="handleSelect">
+                        <el-menu-item index="0" style="float: left;"><img src="./imgs/图标.jpg" alt=""
+                                class="pic-1"></el-menu-item>
+                        <el-menu-item index="3" style="float: right;" @click="location.href = '/login.html'"
+                            v-show="isLogin === false">登录</el-menu-item>
+                        <el-menu-item index="3" style="float: right;" @click="logout"
+                            v-show="isLogin === true">退出登录</el-menu-item>
+                        <el-menu-item style="float: right;"> <el-divider
+                                direction="vertical"></el-divider></el-menu-item>
+                        <el-menu-item index="2" style="float: right;"><a href="./updateMusic.html"
+                                target="_blank">上传音乐</a></el-menu-item>
+                    </el-menu>
+                </div>
+            </el-header>
+            <el-main>
+                <!-- action:上传地址 limit限制数量 preview:点击+时预览 remove:点击删除时
+                exceed:当图片超出时触发函数 success:上传成功时触发函数 -->
+                <el-upload class="upload-demo" :on-preview="handlePreview" :on-remove="handleRemoveMusic" limit="1"
+                    action="/upload/music" :before-upload="beforeAvatarUpload" :on-exceed="exceed"
+                    :on-success="handleSuccessMusic">
+                    <el-button size="small" type="primary">点击上传.mp3格式文件</el-button>
+                </el-upload>
+                <el-upload action="/upload/imgs" limit="1" name="picFile" list-type="picture-card"
+                    :on-preview="handlePictureCardPreview" :on-remove="handleRemoveImg" :on-exceed="exceed"
+                    :on-success="handleSuccessImg">
+                    <i class="el-icon-plus"></i>
+                </el-upload>
+                <el-input style="width: 300px;" type="text" placeholder="歌名" v-model="music.title"></el-input>
+                <el-input style="width: 300px;" type="text" placeholder="歌手" v-model="music.author"></el-input>
+                <el-input style="width: 300px;" type="text" placeholder="分类" v-model="music.categroy"></el-input>
+                <el-input type="textarea" v-model="music.lyric" placeholder="歌词"></el-input>
+                <el-dialog :visible.sync="dialogVisible">
+                    <img width="100%" :src="dialogImageUrl" alt="">
+                </el-dialog>
+                <div>
+                    <el-button type="primary" @click="send" style="width: 150px;">上传</el-button>
+                </div>
+            </el-main>
+            <el-footer>项目版权所有@13组-壹迩三</el-footer>
+        </el-container>
+    </div>
+</body>
+<script>
+    let v = new Vue({
+        el: '#app',
+        data: {
+            music: {
+                uploadId: '',
+                Imgurl: '',
+                mp3url: ''
+            },
+            activeIndex: '1',
+            dialogImageUrl: '',
+            dialogVisible: false,
+            isLogin: false
+        },
+        methods: {
+            beforeAvatarUpload(file) {
+                var testmsg = file.name.substring(file.name.lastIndexOf('.') + 1)
+                const extension = testmsg === 'mp3'
+                if (!extension) {
+                    this.$message({
+                        message: "上传文件只能是mp3格式！",
+                        type: 'error'
+                    })
+                }
+                return extension;
+            },
+            handleSelect(key, keyPath) {
+                console.log(key, keyPath);
+            },
+            send() {
+                axios.post('/music/send', v.music).then(res => {
+                    if (res.data == 1) {
+                        alert('上传成功')
+                        location.href = "/index.html"
+                    } else {
+                        alert('请填写完全信息(图片可选)')
+                    }
+                })
+            },
+            handleRemoveImg(file) {//删除图片
+                axios.get("/remove/imgs?name=" + file.response).then(res => { })
+                console.log('删除完成')
+                this.music.Imgurl = ''
+            },
+            handleRemoveMusic(file) {//删除图片
+                axios.get("/remove/music?name=" + file.response).then(res => { })
+                console.log('删除完成')
+                this.music.mp3url = ''
+            },
+            handlePictureCardPreview(file) {//预览图片
+                this.dialogImageUrl = file.urlImg;
+                this.dialogVisible = true;
+            },
+            handleSuccessImg(response, file) {//上传图片成功
+                // 将返回的图片路径赋值给轮播图的url
+                this.music.Imgurl = response
+            },
+            handleSuccessMusic(response, file) {//上传音频成功
+                this.music.mp3url = response
+            },
+            exceed() {//图片选择超过
+                v.$message.error("图片或音频只能选择一个")
+            },
+            handlePreview(file) {
+                console.log(file);
+            },
+            logout() {
+                if (confirm('是否退出用户')) {
+                    axios.get('/user/logout').then(res => {
+                        this.isLogin = false
+                        location.href = '/index.html'
+                    })
+                }
+            },
+        },
+        created() {
+            axios.get('/user/isLogin').then(res => {
+                console.log('登陆数据:', res.data)
+                if (res.data != '') {
+                    console.log('用户已登录')
+                    this.isLogin = true //判断是否登录赋值true
+                    this.music.uploadId = res.data.id;
+                    // console.log('当前用户id:', this.music.uploadId)
+                } else {
+                    console.log('用户未登录')
+                    location.href = '/login.html'
+                }
+            })
+
+        }
+    })
+</script>
+
+</html>

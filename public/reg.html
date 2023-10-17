@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>注册页面</title>
+    <!-- 引入vue -->
+    <script src="./js/vue.js"></script>
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="./css/eui.css">
+    <!-- 引入组件库 -->
+    <script src="./js/eui.js"></script>
+    <!-- 引入axios -->
+    <script src="./js/axios.min.js"></script>
+    <link rel="stylesheet" href="./css/login.css">
+    <style>
+        .el-button {
+            margin-top: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <div class="cat"></div>
+        <el-card>
+            <el-form style="width: 400px;margin: 30px auto;" label-width="60px">
+                <el-form-item label="账号">
+                    <el-input type="text" v-model="user.username"></el-input>
+                </el-form-item>
+                <el-form-item label="昵称">
+                    <el-input type="password" v-model="user.nick"></el-input>
+                </el-form-item>
+                <el-form-item label="密码">
+                    <el-input type="password" v-model="user.password"></el-input>
+                </el-form-item>
+                <el-form-item>
+                    <el-button type="primary" @click="reg">
+                        注册
+                    </el-button>
+                </el-form-item>
+            </el-form>
+        </el-card>
+    </div>
+    <script>
+        let v = new Vue({
+            el: '#app',
+            data: {
+                user: {}
+            },
+            methods: {
+                reg() {
+                    axios.post("/user/reg", v.user).then(res => {
+                        if (res.data == 1) {
+                            alert('注册成功')
+                            location.href = '/login.html'
+                        } else {
+                            alert('注册失败,昵称已被占用')
+                        }
+                    })
+                }
+            }
+        })
+    </script>
+</body>
+
+</html>

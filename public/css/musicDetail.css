@@ -1,0 +1,44 @@
+.bottom {
+    position: fixed;
+    bottom: 0;
+    height: 100px;
+    width: 100%;
+    background-color: #4c4848;
+}
+
+.music {
+    width: 80%;
+    height: 100%;
+    margin: 0 auto;
+}
+
+.music img {
+    height: 70px;
+    width: 70px;
+}
+
+.el-progress {
+    width: 100%;
+}
+
+.process {
+    margin: 0;
+    padding-top: 20px;
+    margin-left: 100px;
+}
+
+.process .el-progress {
+    height: 20px;
+    padding-top: 35px;
+}
+.process .el-button {
+    margin-top: 20px;
+}
+.musicImg{
+    width: 500px;
+    height: 500px;
+}
+.el-main {
+    height: 80vh;
+    overflow: scroll;
+}

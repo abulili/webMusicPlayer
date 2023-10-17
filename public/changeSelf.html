@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="./js/vue.js"></script>
+    <link rel="stylesheet" href="./css/eui.css">
+    <script src="./js/eui.js"></script>
+    <script src="./js/axios.min.js"></script>
+    <link rel="stylesheet" href="./css/index.css">
+</head>
+
+<body>
+    <div id="app">
+        <el-container>
+            <el-header height="160px">
+                <div>
+                    <el-menu :default-active="activeIndex" class="el-menu-demo menu" mode="horizontal"
+                        @select="handleSelect">
+                        <el-menu-item index="0" style="float: left;"><img src="./imgs/图标.jpg" alt=""
+                                class="pic-1"></el-menu-item>
+                        <el-menu-item index="3" style="float: right;" @click="logout">退出登录</el-menu-item>
+                        <el-menu-item style="float: right;"> <el-divider
+                                direction="vertical"></el-divider></el-menu-item>
+                        <el-menu-item index="5" style="float: right;"><a href="/index.html">回到主页</a></el-menu-item>
+                        <el-menu-item index="2" style="float: right;"><a href="https://www.ele.me"
+                                target="_blank">上传音乐</a></el-menu-item>
+                    </el-menu>
+                </div>
+            </el-header>
+            <el-main>
+                <div>
+                    <img src="./5.jpg" alt="">
+                </div>
+                <el-card>
+                    <el-form style="width: 400px;margin: 30px auto;" label-width="60px">
+                        <el-form-item label="用户名">
+                            <el-input type="text" v-model="user.username" :disabled="true"></el-input>
+                        </el-form-item>
+                        <el-form-item label="昵称">
+                            <el-input type="text" v-model="user.nickname" :disabled="true"></el-input>
+                        </el-form-item>
+                        <el-form-item label="密码">
+                            <el-input type="password" v-model="user.password"></el-input>
+                        </el-form-item>
+                        <el-form-item>
+                            <el-button type="primary" @click="change">
+                                修改
+                            </el-button>
+                        </el-form-item>
+                    </el-form>
+                </el-card>
+            </el-main>
+            <el-footer>项目版权所有@13组-壹迩三</el-footer>
+        </el-container>
+    </div>
+</body>
+<script>
+    let v = new Vue({
+        el: '#app',
+        data: {
+            activeIndex: '1',
+            user: {}
+        },
+        methods: {
+            handleSelect(key, keyPath) {
+                console.log(key, keyPath);
+            },
+            change() {
+                axios.post('/user/send', v.user).then(res => {
+                    if (res.data == 2) {
+                        alert('未更改')
+                    } else {
+                        alert('更改成功')
+                        location.reload()
+                    }
+                })
+            },
+            logout() {
+                if (confirm('是否退出用户')) {
+                    axios.get('/user/logout').then(res => {
+                        this.isLogin = false
+                    })
+                }
+            },
+            getUserById() {
+                let id = location.search.split("=")[1];
+                axios.get('/user/detail?id=' + id).then(res => {
+                    this.user = res.data
+                    console.log(this.user)
+                })
+            }
+        },
+        created() {
+            if (location.search.indexOf('id') != -1) {
+                this.getUserById();
+            } else {
+                location.href = '/login.html'
+            }
+        },
+    })
+</script>
+
+</html>

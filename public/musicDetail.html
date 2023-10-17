@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="./js/vue.js"></script>
+    <link rel="stylesheet" href="./css/eui.css">
+    <script src="./js/eui.js"></script>
+    <script src="./js/axios.min.js"></script>
+    <link rel="stylesheet" href="./css/index.css">
+    <link rel="stylesheet" href="./css/musicDetail.css">
+</head>
+
+<body>
+    <div id="app">
+        <el-container>
+            <el-header height="160px">
+                <div>
+                    <el-menu :default-active="activeIndex" class="el-menu-demo menu" mode="horizontal"
+                        @select="handleSelect">
+                        <el-menu-item index="0" style="float: left;"><img src="./imgs/图标.jpg" alt=""
+                                class="pic-1"></el-menu-item>
+                        <el-menu-item index="3" style="float: right;" @click="location.href = '/login.html'"
+                            v-show="isLogin === false">登录</el-menu-item>
+                        <el-menu-item index="3" style="float: right;" @click="logout"
+                            v-show="isLogin === true">退出登录</el-menu-item>
+                        <el-menu-item style="float: right;"> <el-divider
+                                direction="vertical"></el-divider></el-menu-item>
+                        <el-menu-item index="5" style="float: right;"><a href="/index.html">回到主页</a></el-menu-item>
+                        <el-menu-item index="2" style="float: right;"><a href="https://www.ele.me"
+                                target="_blank">上传音乐</a></el-menu-item>
+                    </el-menu>
+                </div>
+            </el-header>
+            <el-main>
+                <el-row>
+                    <el-col :span="8">
+                        <img class="musicImg" :src="music[0].Imgurl" alt="">
+                    </el-col>
+                    <el-col :span="16" height="80vh" style="overflow: scroll;">
+                        <h2>{{music[0].title}}</h2>
+                        <h3>{{music[0].author}}</h3>
+                        <el-tag type="info">{{music[0].categroy}}</el-tag>
+                        <p v-for="item in lyricData">
+                            {{item.text}}
+                        </p>
+                    </el-col>
+                </el-row>
+            </el-main>
+            <div class="bottom">
+                <div class="music">
+                    <el-row class="process">
+                        <el-col :span="2"><img :src="music[0].Imgurl" alt=""></el-col>
+                        <el-col :span="2"><el-button type="primary" circle :icon="icon"
+                                @click="musicPlay(music[0].mp3url)" ref="audioPlayer"></el-button>
+                        </el-col>
+                        <el-col :span="15"><el-progress :percentage="percentage"
+                                :format="format"></el-progress></el-col>
+                        <el-col :span="5"><el-button :type="type" icon="el-icon-star-off" circle
+                                @click="sendLike"></el-button></el-col>
+                    </el-row>
+                </div>
+
+
+
+            </div>
+    </div>
+    </el-container>
+    </div>
+</body>
+<script>
+    let v = new Vue({
+        el: '#app',
+        data: {
+            icon: 'el-icon-video-play',
+            type: 'primary',
+            activeIndex: '1',
+            music: [],
+            lyricData: [],
+            percentage: 0,
+            current: 0,
+            isLogin: false,
+            userId: ''
+        },
+        methods: {
+            format(percentage) {
+                return percentage === 100 ? '满' : `${percentage}%`;
+            },
+            handleSelect(key, keyPath) {
+                console.log(key, keyPath);
+            },
+            dealL() {
+                const lines = this.music[0].lyric.split('['); // 使用"["分割歌词文本
+                lines.forEach(line => {
+                    const parts = line.split(']');
+                    if (parts.length === 2) {
+                        const time = parts[0];
+                        const text = parts[1].trim();
+                        this.lyricData.push({ time, text });
+                    }
+                });
+            },
+            getMusicById() {
+                let id = location.search.split("=")[1];
+                axios.get('/music/likely?id=' + id).then(res => {
+                    this.music = res.data
+                }).then(res => {
+                    this.dealL()
+                }).then(() => {
+                    return axios.get(`/music/likeif?musicid=${id}&userid=${this.userId}`)
+                }).then(res => {
+                    console.log(res.data);
+                    if (res.data != '') {
+                        this.type = 'warning'
+                    }
+                })
+            },
+            musicPlay(audioPath) {
+                if (this.icon == 'el-icon-video-play') {
+                    audioPath = audioPath.replace(/\\/g, '/')
+                    this.audio = new Audio(audioPath);
+                    if (this.current > 0) {
+                        this.audio.currentTime = this.current;
+                    }
+                    this.audio.play();
+                    this.icon = 'el-icon-video-pause'
+                    this.audio.addEventListener('timeupdate', () => {
+                        let duration = this.audio.duration;
+                        setTimeout(() => {
+                            let currentTime = this.audio.currentTime
+                            this.current = currentTime
+                            console.log('当前播放时间:', currentTime)
+                            this.percentage = (currentTime / duration) * 100
+                            this.percentage = this.percentage.toFixed(0)
+                            console.log('播放进度百分比:', this.percentage)
+                        }, 1000);
+                    });
+                }
+                else {
+                    this.audio.pause();
+                    this.icon = 'el-icon-video-play'
+                }
+            },
+            sendLike() {
+                if (this.isLogin == false) {
+                    location.href = '/login.html'
+                }
+                if (this.type == "warning") {
+                    if (confirm('是否取消收藏')) {
+                        let id = location.search.split("=")[1];
+                        axios.get('/music/delLike?id=' + id).then(res => { })
+                        this.type = 'primary'
+                    }
+                } else {
+                    this.music[0].userId = this.userId
+                    console.log(this.music[0].userId)
+                    axios.post('/music/sendLike', this.music[0]).then(res => {
+                        if (res.data == 1) {
+                            alert('添加成功')
+                            this.type = "warning"
+                        }
+                    })
+                }
+            },
+            logout() {
+                if (confirm('是否退出用户')) {
+                    axios.get('/user/logout').then(res => {
+                        this.isLogin = false
+                    })
+                }
+            },
+        },
+        created() {
+            axios.get('/user/isLogin').then(res => {
+                console.log('登陆数据:', res.data)
+                if (res.data != '') {
+                    console.log('用户已登录')
+                    this.isLogin = true
+                    this.userId = res.data.id
+                    if (location.search.indexOf('id') != -1) {
+                        this.getMusicById();
+                    }
+                } else {
+                    console.log('用户未登录')
+                    alert('登陆后开启音乐之旅')
+                    location.href = '/login.html'
+                }
+            })
+        },
+    })
+</script>
+
+</html>

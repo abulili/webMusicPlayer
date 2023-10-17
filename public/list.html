@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="./js/vue.js"></script>
+    <link rel="stylesheet" href="./css/eui.css">
+    <script src="./js/eui.js"></script>
+    <script src="./js/axios.min.js"></script>
+    <link rel="stylesheet" href="./css/index.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+
+</head>
+
+<body>
+    <div id="app">
+        <el-container>
+            <el-header height="160px">
+                <div>
+                    <el-menu :default-active="activeIndex" class="el-menu-demo menu" mode="horizontal"
+                        @select="handleSelect">
+                        <el-menu-item index="0" style="float: left;"><img src="./imgs/图标.jpg" alt=""
+                                class="pic-1"></el-menu-item>
+                        <el-menu-item index="3" style="float: right;" @click="location.href = '/login.html'"
+                            v-show="isLogin === false">登录</el-menu-item>
+                        <el-menu-item index="3" style="float: right;" @click="logout"
+                            v-show="isLogin === true">退出登录</el-menu-item>
+                        <el-menu-item style="float: right;"> <el-divider
+                                direction="vertical"></el-divider></el-menu-item>
+                        <el-menu-item index="4" style="float: right;" @click="changeSelf"
+                            v-show="isLogin === true">修改个人信息</el-menu-item>
+                        <el-menu-item style="float: right;"> <el-divider
+                                direction="vertical"></el-divider></el-menu-item>
+                        <el-menu-item index="5" style="float: right;"><a href="/index.html">回到主页</a></el-menu-item>
+                        <el-menu-item index="2" style="float: right;"><a
+                                href="/updateMusic.html">上传音乐</a></el-menu-item>
+                    </el-menu>
+                </div>
+                <div>
+                    搜索结果如下
+                </div>
+            </el-header>
+            <el-main>
+                <el-table :data="MusicArr" stripe style="width: 100%">
+                    <el-table-column width="180px">
+                    </el-table-column>
+                    <el-table-column prop="title" label="歌曲">
+                    </el-table-column>
+                    <el-table-column prop="author" label="歌手">
+                    </el-table-column>
+                    <el-table-column label="播放">
+                        <template slot-scope="scope">
+                            <el-button icon="el-icon-video-play" circle @click="musicPlay(scope.row.id)"></el-button>
+                        </template>
+                    </el-table-column>
+                    <!-- <el-table-column prop="like" label="收藏">
+                        <el-button type="warning" :icon="icon" circle></el-button>
+                    </el-table-column> -->
+                </el-table>
+            </el-main>
+            <el-footer>
+                项目版权所有@13组-壹迩三
+            </el-footer>
+        </el-container>
+    </div>
+</body>
+<script>
+    let v = new Vue({
+        el: '#app',
+        data: {
+            isLogin: false,
+            activeIndex: '1',
+            bannerIndex: '0',
+            MusicArr: [],
+            icon: 'el-icon-video-play',
+            audio: '',
+        },
+        methods: {
+            musicPlay(id) {
+                // console.log(audioPath)
+                if (this.isLogin == false) {
+                    alert('请登陆后再进行操作')
+                    location.href = '/login.html'
+                }
+                else
+                    location.href = '/musicDetail.html?id=' + id
+            },
+            handleSelect(key, keyPath) {
+                console.log(key, keyPath);
+            },
+            logout() {
+                if (confirm('是否退出用户')) {
+                    axios.get('/user/logout').then(res => {
+                        this.isLogin = false
+                    })
+                }
+            },
+            getMusicByWd() {
+                let wd = location.search.split("=")[1];
+                axios.get('/music/search?wd=' + wd).then(res => {
+                    this.MusicArr = res.data
+                    console.log(this.MusicArr)
+                })
+            },
+            changeSelf() {
+                location.href = '/changeSelf.html?id=' + this.userId
+            },
+        },
+        created() {
+            axios.get('/user/isLogin').then(res => {
+                console.log('登陆数据:', res.data)
+                if (res.data != '') {
+                    console.log('用户已登录')
+                    this.isLogin = true //判断是否登录赋值true
+                } else {
+                    console.log('用户未登录')
+                }
+            })
+            if (location.search.indexOf('wd') != -1) {
+                this.getMusicByWd();
+            } else {
+                alert('你还未进行搜索')
+            }
+        },
+    })
+</script>
+
+</html>
